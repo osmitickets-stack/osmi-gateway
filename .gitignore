@@ -1,0 +1,64 @@
+# Go
+*.exe
+*.out
+*.test
+*.log
+*.tmp
+*.swp
+*.bak
+bin/
+vendor/
+
+# OS
+*.DS_Store
+Thumbs.db
+
+# Protobuf generated files
+gen/*.pb.go
+gen/*.pb_grpc.go
+
+# Config / Environment variables
+.env
+.env.local
+.env.production
+.env.development
+config/*.env
+
+# Docker
+*.tar
+*.img
+data/
+volumes/
+
+# IDE/editor
+.vscode/
+.idea/
+*.code-workspace
+
+# Archivos generados
+gen/
+
+# Dependencias de protobuf (si las quieres ignorar)
+third_party/googleapis/
+
+# Carpeta github.com/ si se vuelve a generar
+github.com/
+
+# Secrets
+*.pem
+*.key
+*.crt
+
+# IDE
+.vscode/
+.idea/
+*.swp
+*.swo
+
+# Logs
+*.log
+logs/
+
+# Temporal
+tmp/
+EOF
