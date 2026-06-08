@@ -86,6 +86,7 @@ func NewServer(cfg *config.Config) (*Server, error) {
 		"/v1/payments",        // ← Pagos públicos (invitado)
 		"/v1/payments/intent",
 		"/v1/webhooks/stripe", // ← Webhook de Stripe
+		"/v1/users",           // ← Permitir registro de usuarios sin auth
 	}, cfg.JWTSecret, redisClient)
 	handler = middleware.CORS(handler)
 

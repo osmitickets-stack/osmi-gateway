@@ -1,4 +1,3 @@
-// internal/grpc/connection.go
 package grpc
 
 import (
@@ -23,10 +22,13 @@ func NewClientConnection(cfg *config.Config) (*ClientConnection, error) {
 		PermitWithoutStream: true,
 	}
 
+	authInterceptor := NewAuthInterceptor(cfg.JWTSecret)
+
 	conn, err := grpc.NewClient(
 		cfg.GRPCServerAddr,
 		grpc.WithTransportCredentials(insecure.NewCredentials()),
 		grpc.WithKeepaliveParams(keepaliveParams),
+		grpc.WithUnaryInterceptor(authInterceptor.UnaryClientInterceptor),
 		grpc.WithDefaultCallOptions(
 			grpc.MaxCallRecvMsgSize(1024*1024*10),
 			grpc.MaxCallSendMsgSize(1024*1024*10),
