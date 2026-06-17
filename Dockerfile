@@ -24,7 +24,6 @@ RUN apk add --no-cache ca-certificates tzdata
 WORKDIR /app
 
 COPY --from=builder /app/osmi-gateway/gateway .
-COPY --from=builder /app/osmi-gateway/.env.production ./.env
 
 EXPOSE 8080
 
