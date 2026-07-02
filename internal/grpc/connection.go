@@ -4,7 +4,7 @@ import (
 	"log"
 	"time"
 
-	"github.com/franciscozamorau/osmi-gateway/internal/config"
+	"github.com/osmitickets-stack/osmi-gateway/internal/config"
 	"google.golang.org/grpc"
 	"google.golang.org/grpc/credentials/insecure"
 	"google.golang.org/grpc/keepalive"

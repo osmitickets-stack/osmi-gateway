@@ -8,13 +8,13 @@ import (
 	"syscall"
 	"time"
 
-	"github.com/franciscozamorau/osmi-gateway/internal/config"
-	"github.com/franciscozamorau/osmi-gateway/internal/server"
-	"github.com/joho/godotenv" // 🔥 AGREGAR ESTE IMPORT
+	"github.com/joho/godotenv"
+	"github.com/osmitickets-stack/osmi-gateway/internal/config"
+	"github.com/osmitickets-stack/osmi-gateway/internal/server"
 )
 
 func main() {
-	// 🔥 CARGAR .env ANTES DE TODO (IGUAL QUE EL SERVER)
+	// CARGAR .env ANTES DE TODO (IGUAL QUE EL SERVER)
 	if err := godotenv.Load(); err != nil {
 		log.Println("⚠️ No .env file found, using system environment variables")
 	}

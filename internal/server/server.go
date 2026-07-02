@@ -7,17 +7,17 @@ import (
 	"net/http"
 	"time"
 
-	"github.com/franciscozamorau/osmi-gateway/internal/cache"
-	"github.com/franciscozamorau/osmi-gateway/internal/config"
-	gatewayGrpc "github.com/franciscozamorau/osmi-gateway/internal/grpc"
-	"github.com/franciscozamorau/osmi-gateway/internal/handlers/health"
-	"github.com/franciscozamorau/osmi-gateway/internal/handlers/webhook"
-	"github.com/franciscozamorau/osmi-gateway/internal/middleware"
 	"github.com/grpc-ecosystem/grpc-gateway/v2/runtime"
+	"github.com/osmitickets-stack/osmi-gateway/internal/cache"
+	"github.com/osmitickets-stack/osmi-gateway/internal/config"
+	gatewayGrpc "github.com/osmitickets-stack/osmi-gateway/internal/grpc"
+	"github.com/osmitickets-stack/osmi-gateway/internal/handlers/health"
+	"github.com/osmitickets-stack/osmi-gateway/internal/handlers/webhook"
+	"github.com/osmitickets-stack/osmi-gateway/internal/middleware"
 	"google.golang.org/grpc"
 	"google.golang.org/grpc/credentials/insecure"
 
-	pb "github.com/franciscozamorau/osmi-protobuf/gen/pb"
+	pb "github.com/osmitickets-stack/osmi-protobuf/gen/pb"
 )
 
 type Server struct {

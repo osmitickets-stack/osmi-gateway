@@ -6,9 +6,9 @@ import (
 	"net/http"
 	"strings"
 
-	"github.com/franciscozamorau/osmi-gateway/internal/cache"
 	"github.com/golang-jwt/jwt/v5"
 	"github.com/google/uuid"
+	"github.com/osmitickets-stack/osmi-gateway/internal/cache"
 )
 
 type contextKey string

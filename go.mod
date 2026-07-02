@@ -1,13 +1,13 @@
-module github.com/franciscozamorau/osmi-gateway
+module github.com/osmitickets-stack/osmi-gateway
 
 go 1.25.0
 
 require (
-	github.com/franciscozamorau/osmi-protobuf v0.0.0
 	github.com/golang-jwt/jwt/v5 v5.3.1
 	github.com/google/uuid v1.6.0
 	github.com/grpc-ecosystem/grpc-gateway/v2 v2.28.0
 	github.com/joho/godotenv v1.5.1
+	github.com/osmitickets-stack/osmi-protobuf v1.0.0
 	github.com/redis/go-redis/v9 v9.18.0
 	golang.org/x/time v0.15.0
 	google.golang.org/grpc v1.79.1
@@ -24,5 +24,3 @@ require (
 	google.golang.org/genproto/googleapis/rpc v0.0.0-20260209200024-4cfbd4190f57 // indirect
 	google.golang.org/protobuf v1.36.11 // indirect
 )
-
-replace github.com/franciscozamorau/osmi-protobuf => ../osmi-protobuf

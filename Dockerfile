@@ -1,30 +1,52 @@
+# ==========================
+# Builder
+# ==========================
 FROM golang:1.25-alpine AS builder
 
 WORKDIR /app
 
-COPY osmi-gateway/go.mod osmi-gateway/go.sum ./osmi-gateway/
-COPY osmi-protobuf/go.mod ./osmi-protobuf/
-COPY osmi-protobuf/go.sum ./osmi-protobuf/
-COPY osmi-protobuf/gen ./osmi-protobuf/gen
-COPY osmi-protobuf/proto ./osmi-protobuf/proto
+RUN apk add --no-cache git
 
-WORKDIR /app/osmi-gateway
+COPY go.mod go.sum ./
 
 RUN go mod download
 
-COPY osmi-gateway ./
+COPY . .
 
-RUN CGO_ENABLED=0 GOOS=linux go build -o gateway ./cmd/main.go
+RUN CGO_ENABLED=0 \
+    GOOS=linux \
+    GOARCH=amd64 \
+    go build \
+    -trimpath \
+    -ldflags="-s -w" \
+    -o gateway \
+    ./cmd/main.go
 
+# ==========================
+# Runtime
+# ==========================
+FROM alpine:3.20
 
-FROM alpine:3.19
+RUN apk add --no-cache \
+    ca-certificates \
+    tzdata \
+    netcat-openbsd
 
-RUN apk add --no-cache ca-certificates tzdata
+RUN addgroup -S osmi && adduser -S osmi -G osmi
 
 WORKDIR /app
 
-COPY --from=builder /app/osmi-gateway/gateway .
+COPY --from=builder /app/gateway .
 
-EXPOSE 8080
+USER osmi
+
+EXPOSE 8083
+
+HEALTHCHECK \
+    --interval=30s \
+    --timeout=5s \
+    --start-period=10s \
+    --retries=3 \
+    CMD nc -z localhost 8083 || exit 1
 
 CMD ["./gateway"]

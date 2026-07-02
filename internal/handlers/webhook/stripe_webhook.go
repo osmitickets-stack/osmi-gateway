@@ -5,7 +5,7 @@ import (
 	"log"
 	"net/http"
 
-	pb "github.com/franciscozamorau/osmi-protobuf/gen/pb"
+	pb "github.com/osmitickets-stack/osmi-protobuf/gen/pb"
 	"google.golang.org/grpc"
 	"google.golang.org/grpc/metadata"
 )
