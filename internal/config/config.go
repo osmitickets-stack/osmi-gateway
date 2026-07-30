@@ -1,9 +1,11 @@
+// internal/config/config.go
 package config
 
 import (
 	"log"
 	"os"
 	"strconv"
+	"strings"
 )
 
 type Config struct {
@@ -17,6 +19,7 @@ type Config struct {
 	RedisURL       string
 	RedisPassword  string
 	RedisDB        int
+	CORSOrigins    []string
 }
 
 func Load() *Config {
@@ -31,6 +34,7 @@ func Load() *Config {
 		RedisURL:       getEnv("REDIS_URL", "localhost:6379"),
 		RedisPassword:  getEnv("REDIS_PASSWORD", ""),
 		RedisDB:        getEnvAsInt("REDIS_DB", 0),
+		CORSOrigins:    getEnvAsSlice("CORS_ORIGINS", []string{"http://localhost:3000", "https://www.myosmi.com", "https://myosmi.com"}),
 	}
 }
 
@@ -47,6 +51,17 @@ func getEnvAsInt(key string, defaultValue int) int {
 			return intVal
 		}
 		log.Printf("Warning: invalid integer for %s, using default", key)
+	}
+	return defaultValue
+}
+
+func getEnvAsSlice(key string, defaultValue []string) []string {
+	if value := os.Getenv(key); value != "" {
+		parts := strings.Split(value, ",")
+		for i, part := range parts {
+			parts[i] = strings.TrimSpace(part)
+		}
+		return parts
 	}
 	return defaultValue
 }
