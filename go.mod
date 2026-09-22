@@ -7,7 +7,7 @@ require (
 	github.com/google/uuid v1.6.0
 	github.com/grpc-ecosystem/grpc-gateway/v2 v2.28.0
 	github.com/joho/godotenv v1.5.1
-	github.com/osmitickets-stack/osmi-protobuf v1.0.0
+	github.com/osmitickets-stack/osmi-protobuf v1.0.6
 	github.com/redis/go-redis/v9 v9.18.0
 	golang.org/x/time v0.15.0
 	google.golang.org/grpc v1.79.1

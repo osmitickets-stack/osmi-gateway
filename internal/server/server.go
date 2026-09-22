@@ -1,4 +1,4 @@
-// internal/server/server.go
+// osmi-gateway/internal/server/server.go
 package server
 
 import (
