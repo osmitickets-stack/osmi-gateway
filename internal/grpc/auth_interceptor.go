@@ -4,6 +4,7 @@ import (
 	"context"
 
 	"github.com/golang-jwt/jwt/v5"
+	"github.com/osmitickets-stack/osmi-gateway/internal/middleware"
 	"google.golang.org/grpc"
 	"google.golang.org/grpc/metadata"
 )
@@ -28,9 +29,20 @@ func (a *AuthInterceptor) UnaryClientInterceptor(
 	opts ...grpc.CallOption,
 ) error {
 	// Extraer user_id del contexto HTTP (inyectado por el middleware Auth)
-	if userID, ok := ctx.Value("user_id").(string); ok && userID != "" {
-		ctx = metadata.AppendToOutgoingContext(ctx, "user-id", userID)
+	// Preservar la metadata no relacionada con identidad.
+	// Nunca confiar en un user-id que ya venga en el contexto.
+	outgoingMD, _ := metadata.FromOutgoingContext(ctx)
+	outgoingMD = outgoingMD.Copy()
+
+	outgoingMD.Delete("user-id")
+
+	// La única identidad permitida procede del middleware HTTP
+	// que verificó el token JWT.
+	if userID, ok := middleware.GetUserIDFromContext(ctx); ok && userID != "" {
+		outgoingMD.Set("user-id", userID)
 	}
+
+	ctx = metadata.NewOutgoingContext(ctx, outgoingMD)
 
 	return invoker(ctx, method, req, reply, cc, opts...)
 }

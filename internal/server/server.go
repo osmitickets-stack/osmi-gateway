@@ -5,6 +5,7 @@ import (
 	"context"
 	"log"
 	"net/http"
+	"strings"
 	"time"
 
 	"github.com/grpc-ecosystem/grpc-gateway/v2/runtime"
@@ -14,8 +15,6 @@ import (
 	"github.com/osmitickets-stack/osmi-gateway/internal/handlers/health"
 	"github.com/osmitickets-stack/osmi-gateway/internal/handlers/webhook"
 	"github.com/osmitickets-stack/osmi-gateway/internal/middleware"
-	"google.golang.org/grpc"
-	"google.golang.org/grpc/credentials/insecure"
 
 	pb "github.com/osmitickets-stack/osmi-protobuf/gen/pb"
 )
@@ -49,17 +48,20 @@ func NewServer(cfg *config.Config) (*Server, error) {
 		return nil, err
 	}
 
-	mux := runtime.NewServeMux()
+	mux := runtime.NewServeMux(
+		runtime.WithIncomingHeaderMatcher(
+			trustedIncomingHeaderMatcher,
+		),
+	)
 
-	opts := []grpc.DialOption{
-		grpc.WithTransportCredentials(insecure.NewCredentials()),
-	}
+	grpcClient := pb.NewOsmiServiceClient(
+		grpcConn.GetConnection(),
+	)
 
-	err = pb.RegisterOsmiServiceHandlerFromEndpoint(
+	err = pb.RegisterOsmiServiceHandlerClient(
 		context.Background(),
 		mux,
-		cfg.GRPCServerAddr,
-		opts,
+		grpcClient,
 	)
 	if err != nil {
 		grpcConn.Close()
@@ -126,4 +128,20 @@ func (s *Server) Stop(ctx context.Context) error {
 		return s.httpServer.Shutdown(ctx)
 	}
 	return nil
+}
+
+// trustedIncomingHeaderMatcher impide que un cliente HTTP
+// inyecte la identidad interna del usuario.
+func trustedIncomingHeaderMatcher(key string) (string, bool) {
+	mapped, ok := runtime.DefaultHeaderMatcher(key)
+	if !ok {
+		return "", false
+	}
+
+	// user-id pertenece exclusivamente a la capa de autenticación.
+	if strings.EqualFold(mapped, "user-id") {
+		return "", false
+	}
+
+	return mapped, true
 }
