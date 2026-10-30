@@ -3,6 +3,7 @@ package server
 
 import (
 	"context"
+	"fmt"
 	"log"
 	"net/http"
 	"strings"
@@ -28,7 +29,12 @@ type Server struct {
 
 func NewServer(cfg *config.Config) (*Server, error) {
 	if cfg.JWTSecret == "" {
-		log.Fatal("❌ JWT_SECRET_KEY is required in .env file")
+		return nil, fmt.Errorf("JWT_SECRET_KEY is required")
+	}
+
+	grpcConn, err := gatewayGrpc.NewClientConnection(cfg)
+	if err != nil {
+		return nil, err
 	}
 
 	// Inicializar Redis (opcional, para blacklist)
@@ -37,15 +43,11 @@ func NewServer(cfg *config.Config) (*Server, error) {
 		var err error
 		redisClient, err = cache.NewRedisClient(cfg.RedisURL, cfg.RedisPassword, cfg.RedisDB)
 		if err != nil {
-			log.Printf("⚠️ Redis not available, blacklist disabled: %v", err)
+			grpcConn.Close()
+			return nil, fmt.Errorf("connect token revocation store: %w", err)
 		} else {
 			log.Println("✅ Redis connected for token blacklist")
 		}
-	}
-
-	grpcConn, err := gatewayGrpc.NewClientConnection(cfg)
-	if err != nil {
-		return nil, err
 	}
 
 	mux := runtime.NewServeMux(
@@ -65,6 +67,9 @@ func NewServer(cfg *config.Config) (*Server, error) {
 	)
 	if err != nil {
 		grpcConn.Close()
+		if redisClient != nil {
+			redisClient.Close()
+		}
 		return nil, err
 	}
 
@@ -139,7 +144,8 @@ func trustedIncomingHeaderMatcher(key string) (string, bool) {
 	}
 
 	// user-id pertenece exclusivamente a la capa de autenticación.
-	if strings.EqualFold(mapped, "user-id") {
+	normalized := strings.ReplaceAll(strings.ToLower(mapped), "_", "-")
+	if normalized == "user-id" || normalized == "x-user-id" || normalized == "role" || normalized == "roles" || normalized == "is-superuser" || normalized == "is-staff" {
 		return "", false
 	}
 

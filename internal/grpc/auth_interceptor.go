@@ -3,10 +3,12 @@ package grpc
 import (
 	"context"
 
-	"github.com/golang-jwt/jwt/v5"
+	"github.com/google/uuid"
 	"github.com/osmitickets-stack/osmi-gateway/internal/middleware"
 	"google.golang.org/grpc"
+	"google.golang.org/grpc/codes"
 	"google.golang.org/grpc/metadata"
+	"google.golang.org/grpc/status"
 )
 
 type AuthInterceptor struct {
@@ -34,12 +36,21 @@ func (a *AuthInterceptor) UnaryClientInterceptor(
 	outgoingMD, _ := metadata.FromOutgoingContext(ctx)
 	outgoingMD = outgoingMD.Copy()
 
-	outgoingMD.Delete("user-id")
+	for _, key := range []string{"user-id", "user_id", "x-user-id", "grpc-metadata-user-id", "role", "roles", "is-superuser", "is-staff", "authorization"} {
+		outgoingMD.Delete(key)
+	}
 
 	// La única identidad permitida procede del middleware HTTP
 	// que verificó el token JWT.
 	if userID, ok := middleware.GetUserIDFromContext(ctx); ok && userID != "" {
+		id, err := uuid.Parse(userID)
+		if err != nil || id == uuid.Nil || id.String() != userID {
+			return status.Error(codes.Unauthenticated, "invalid authenticated user identity")
+		}
 		outgoingMD.Set("user-id", userID)
+		if token, ok := middleware.ValidatedAccessToken(ctx); ok && token != "" {
+			outgoingMD.Set("authorization", "Bearer "+token)
+		}
 	}
 
 	ctx = metadata.NewOutgoingContext(ctx, outgoingMD)
@@ -49,18 +60,5 @@ func (a *AuthInterceptor) UnaryClientInterceptor(
 
 // Extrae user_id del token JWT (para cuando no hay contexto HTTP)
 func (a *AuthInterceptor) ExtractUserID(tokenString string) (string, error) {
-	token, err := jwt.Parse(tokenString, func(token *jwt.Token) (interface{}, error) {
-		return a.jwtSecret, nil
-	})
-	if err != nil {
-		return "", err
-	}
-
-	claims, ok := token.Claims.(jwt.MapClaims)
-	if !ok {
-		return "", jwt.ErrSignatureInvalid
-	}
-
-	userID, _ := claims["user_id"].(string)
-	return userID, nil
+	return middleware.AuthenticatedUserID(tokenString, string(a.jwtSecret))
 }

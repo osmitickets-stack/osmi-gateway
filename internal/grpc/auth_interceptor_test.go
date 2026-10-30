@@ -18,18 +18,18 @@ func TestAuthInterceptorReplacesUntrustedIdentity(t *testing.T) {
 	}{
 		{
 			name:          "authenticated user",
-			authenticated: "user-a",
-			expected:      "user-a",
+			authenticated: "11111111-1111-4111-8111-111111111111",
+			expected:      "11111111-1111-4111-8111-111111111111",
 		},
 		{
 			name:          "injected identity is replaced",
-			authenticated: "user-a",
-			injected:      "user-b",
-			expected:      "user-a",
+			authenticated: "11111111-1111-4111-8111-111111111111",
+			injected:      "22222222-2222-4222-8222-222222222222",
+			expected:      "11111111-1111-4111-8111-111111111111",
 		},
 		{
 			name:     "unauthenticated request cannot inject identity",
-			injected: "user-b",
+			injected: "22222222-2222-4222-8222-222222222222",
 		},
 	}
 

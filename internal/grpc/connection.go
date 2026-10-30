@@ -5,8 +5,8 @@ import (
 	"time"
 
 	"github.com/osmitickets-stack/osmi-gateway/internal/config"
+	"github.com/osmitickets-stack/osmi-gateway/internal/transportsecurity"
 	"google.golang.org/grpc"
-	"google.golang.org/grpc/credentials/insecure"
 	"google.golang.org/grpc/keepalive"
 )
 
@@ -16,9 +16,13 @@ type ClientConnection struct {
 }
 
 func NewClientConnection(cfg *config.Config) (*ClientConnection, error) {
+	transportCredentials, err := transportsecurity.LoadClientCredentials(cfg.GRPCTLS)
+	if err != nil {
+		return nil, err
+	}
 	keepaliveParams := keepalive.ClientParameters{
-		Time:                10 * time.Second,
-		Timeout:             5 * time.Second,
+		Time:                60 * time.Second,
+		Timeout:             20 * time.Second,
 		PermitWithoutStream: true,
 	}
 
@@ -26,7 +30,7 @@ func NewClientConnection(cfg *config.Config) (*ClientConnection, error) {
 
 	conn, err := grpc.NewClient(
 		cfg.GRPCServerAddr,
-		grpc.WithTransportCredentials(insecure.NewCredentials()),
+		grpc.WithTransportCredentials(transportCredentials),
 		grpc.WithKeepaliveParams(keepaliveParams),
 		grpc.WithUnaryInterceptor(authInterceptor.UnaryClientInterceptor),
 		grpc.WithDefaultCallOptions(
@@ -41,7 +45,7 @@ func NewClientConnection(cfg *config.Config) (*ClientConnection, error) {
 		return nil, err
 	}
 
-	log.Printf("✅ Conectado a gRPC server en %s", cfg.GRPCServerAddr)
+	log.Printf("Cliente gRPC con mTLS configurado para %s", cfg.GRPCServerAddr)
 
 	return &ClientConnection{
 		conn: conn,
