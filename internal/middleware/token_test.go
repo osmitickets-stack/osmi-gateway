@@ -23,6 +23,10 @@ func TestAuthenticatedTokenBoundary(t *testing.T) {
 		allow  bool
 	}{
 		{"valid", jwt.MapClaims{"user_id": user, "exp": time.Now().Add(time.Minute).Unix()}, jwt.SigningMethodHS256, secret, true},
+		{"typed access", jwt.MapClaims{"user_id": user, "token_type": "access", "exp": time.Now().Add(time.Minute).Unix()}, jwt.SigningMethodHS256, secret, true},
+		{"typed refresh", jwt.MapClaims{"user_id": user, "token_type": "refresh", "exp": time.Now().Add(time.Minute).Unix()}, jwt.SigningMethodHS256, secret, false},
+		{"unknown type", jwt.MapClaims{"user_id": user, "token_type": "other", "exp": time.Now().Add(time.Minute).Unix()}, jwt.SigningMethodHS256, secret, false},
+		{"legacy long-lived refresh", jwt.MapClaims{"user_id": user, "iat": time.Now().Unix(), "exp": time.Now().Add(7 * 24 * time.Hour).Unix()}, jwt.SigningMethodHS256, secret, false},
 		{"expired", jwt.MapClaims{"user_id": user, "exp": time.Now().Add(-time.Minute).Unix()}, jwt.SigningMethodHS256, secret, false},
 		{"no expiration", jwt.MapClaims{"user_id": user}, jwt.SigningMethodHS256, secret, false},
 		{"wrong signature", jwt.MapClaims{"user_id": user, "exp": time.Now().Add(time.Minute).Unix()}, jwt.SigningMethodHS256, "wrong-key", false},
