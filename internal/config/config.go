@@ -2,6 +2,7 @@
 package config
 
 import (
+	"github.com/osmitickets-stack/osmi-gateway/internal/transportsecurity"
 	"log"
 	"os"
 	"strconv"
@@ -9,6 +10,7 @@ import (
 )
 
 type Config struct {
+	GRPCTLS        transportsecurity.Config
 	HTTPPort       string
 	GRPCServerAddr string
 	Environment    string
@@ -24,6 +26,12 @@ type Config struct {
 
 func Load() *Config {
 	return &Config{
+		GRPCTLS: transportsecurity.Config{
+			CAFile:     getEnv("GRPC_TLS_CA_FILE", ""),
+			CertFile:   getEnv("GRPC_TLS_CERT_FILE", ""),
+			KeyFile:    getEnv("GRPC_TLS_KEY_FILE", ""),
+			ServerName: getEnv("GRPC_TLS_SERVER_NAME", "osmi-server"),
+		},
 		HTTPPort:       getEnv("HTTP_PORT", "8083"),
 		GRPCServerAddr: getEnv("GRPC_SERVER_ADDR", "localhost:50051"),
 		Environment:    getEnv("ENVIRONMENT", "development"),

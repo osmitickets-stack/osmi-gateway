@@ -20,7 +20,10 @@ func NewRedisClient(addr, password string, db int) (*RedisClient, error) {
 		DB:       db,
 	})
 
-	if err := client.Ping(context.Background()).Err(); err != nil {
+	ctx, cancel := context.WithTimeout(context.Background(), 5*time.Second)
+	defer cancel()
+	if err := client.Ping(ctx).Err(); err != nil {
+		client.Close()
 		return nil, err
 	}
 
