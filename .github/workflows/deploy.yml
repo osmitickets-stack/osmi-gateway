@@ -1,14 +1,12 @@
 name: Deploy to Production
 
 on:
-
-  workflow_run:
-    workflows:
-      - Docker Build & Publish
-    types:
-      - completed
-
   workflow_dispatch:
+    inputs:
+      confirmation:
+        description: 'Escribe DEPLOY-PRODUCTION para confirmar el despliegue manual'
+        required: true
+        type: string
 
 permissions:
   contents: read
@@ -20,12 +18,11 @@ concurrency:
 jobs:
 
   deploy:
-
-    if: >
-      github.event_name == 'workflow_dispatch' ||
-      github.event.workflow_run.conclusion == 'success'
+    if: ${{ inputs.confirmation == 'DEPLOY-PRODUCTION' }}
 
     runs-on: ubuntu-latest
+
+    environment: production
 
     timeout-minutes: 20
 
@@ -55,10 +52,7 @@ jobs:
 
             echo "Starting updated containers..."
 
-            docker compose up -d --remove-orphans
-
-            echo "Cleaning unused images..."
-
-            docker image prune -af
+            docker compose up -d
 
             echo "Deployment completed."
+
