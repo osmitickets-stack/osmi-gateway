@@ -34,6 +34,9 @@ jobs:
       - name: Checkout repository
         uses: actions/checkout@v4
 
+      - name: Check production Nginx repair syntax
+        run: bash -n scripts/fix-production-gateway-dns.sh
+
       - name: Setup Go
         uses: actions/setup-go@v5
         with:
