@@ -13,46 +13,33 @@ permissions:
 
 concurrency:
   group: production
-  cancel-in-progress: true
+  cancel-in-progress: false
 
 jobs:
-
   deploy:
     if: ${{ inputs.confirmation == 'DEPLOY-PRODUCTION' }}
-
     runs-on: ubuntu-latest
-
     environment: production
-
     timeout-minutes: 20
-
     steps:
-
-      - name: Deploy using SSH
-
+      - name: Deploy Server and Gateway using SSH
         uses: appleboy/ssh-action@v1.2.2
-
         with:
-
           host: ${{ secrets.EC2_HOST }}
-
           username: ${{ secrets.EC2_USER }}
-
           key: ${{ secrets.EC2_SSH_KEY }}
-
           script: |
-
-            set -e
-
+            set -eu
             cd /opt/osmi
-
-            echo "Pulling latest images..."
-
-            docker compose pull
-
-            echo "Starting updated containers..."
-
-            docker compose up -d
-
-            echo "Deployment completed."
+            for file in deploy/compose.checkin-prod.yml deploy/compose.checkin-images.yml deploy/compose.checkin-rollback.yml; do
+              test -r "$file" || { echo "Missing deployment file: $file"; exit 1; }
+            done
+            compose() {
+              docker compose -f docker-compose.yml -f deploy/compose.checkin-prod.yml -f deploy/compose.checkin-images.yml "$@"
+            }
+            compose config --quiet
+            compose config --format json | python3 -c 'import json,re,sys; services=json.load(sys.stdin)["services"]; valid=all(re.fullmatch(r"ghcr\.io/osmitickets-stack/osmi-"+name+r"@sha256:[0-9a-f]{64}",services[name]["image"]) for name in ("server","gateway")); print("Pinned images verified" if valid else "Images must be pinned by digest"); sys.exit(0 if valid else 1)'
+            compose pull server gateway
+            compose up -d --no-deps --wait --wait-timeout 180 server gateway
+            echo "Server and Gateway deployment completed."
 
